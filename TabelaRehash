@@ -1,0 +1,101 @@
+import java.util.Random;
+
+public class TabelaRehash {
+    private int tamanho = 100;
+    private int qtdElementos = 100;
+    private int limite = 90; // 90% de 100 posições
+    private int vazio = -1;  // marca de posição livre
+
+    private int[] tabela;
+    private int[] inseridos;
+    private int[] colisoesPorElemento;
+    private int qtdInseridos = 0;
+    private int ocupados = 0;
+    private int totalColisoes = 0;
+    private int bloqueados = 0;
+
+    public static void main(String[] args) {
+        TabelaRehash hash = new TabelaRehash();
+        hash.executar();
+    }
+
+    private void executar() {
+        tabela = new int[tamanho];
+        for (int i = 0; i < tamanho; i++) {
+            tabela[i] = vazio;
+        }
+
+        inseridos = new int[qtdElementos];
+        colisoesPorElemento = new int[qtdElementos];
+
+        Random random = new Random(1090);
+
+        // inserção
+        for (int i = 0; i < qtdElementos; i++) {
+            int valor = random.nextInt(100000); // 0 a 99999
+
+            if (ocupados >= limite) {
+                bloqueados++; // rehash impede a inserção
+            } else {
+                int pos = valor % tamanho;
+                int colisoes = 0;
+
+                while (tabela[pos] != vazio) {
+                    colisoes++;
+                    pos = (pos + 1) % tamanho;
+                }
+
+                tabela[pos] = valor;
+                ocupados++;
+                totalColisoes = totalColisoes + colisoes;
+
+                inseridos[qtdInseridos] = valor;
+                colisoesPorElemento[qtdInseridos] = colisoes;
+                qtdInseridos++;
+            }
+        }
+
+        // 3 elementos que mais colidiram
+        boolean[] escolhido = new boolean[qtdInseridos];
+        int[] top = new int[3];
+        int qtdTop = 0;
+
+        for (int k = 0; k < 3; k++) {
+            int maior = -1;
+            for (int j = 0; j < qtdInseridos; j++) {
+                if (!escolhido[j]) {
+                    if (maior == -1 || colisoesPorElemento[j] > colisoesPorElemento[maior]) {
+                        maior = j;
+                    }
+                }
+            }
+            if (maior != -1) {
+                escolhido[maior] = true;
+                top[qtdTop] = maior;
+                qtdTop++;
+            }
+        }
+
+        // resultados
+        System.out.println("Elementos inseridos: " + ocupados);
+        System.out.println("Inserções bloqueadas pelo limite de 90%: " + bloqueados);
+        System.out.println("Total de colisões: " + totalColisoes);
+
+        System.out.println("3 elementos que mais colidiram:");
+        for (int k = 0; k < qtdTop; k++) {
+            int idx = top[k];
+            System.out.println("  " + inseridos[idx] + " -> " + colisoesPorElemento[idx] + " colisões");
+        }
+
+        System.out.print("Posições livres: ");
+        int livres = 0;
+        for (int i = 0; i < tamanho; i++) {
+            if (tabela[i] == vazio) {
+                System.out.print(i + " ");
+                livres++;
+            }
+        }
+        System.out.println();
+        System.out.println("Total de posições livres: " + livres);
+    }
+}
